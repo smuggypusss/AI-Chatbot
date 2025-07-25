@@ -1,0 +1,10 @@
+[
+  {
+    "user": "Is there a checklist or something we need to follow for these trips?",
+    "ai": "Yes, there is a \"Checkliste Repatriierung rega\" that must be followed for these trips."
+  },
+  {
+    "user": "what does the list comprise of?",
+    "ai": "The list comprises the names of all employees whose bags need to be prepared and transported to the respective rescue stations, such as Rettungswache Kloten and Rettungswache Niederglatt. It also includes a section to check off which bags were provided, which were not, and the number of service days completed at the respective external station."
+  }
+]

@@ -1,0 +1,27 @@
+# Python
+backend/__pycache__/
+backend/*.pyc
+backend/*.pyo
+backend/*.pyd
+backend/.Python
+backend/env/
+backend/venv/
+backend/.env
+backend/.env.*
+backend/.mypy_cache/
+backend/.pytest_cache/
+backend/.DS_Store
+
+# React/Node
+frontend/node_modules/
+frontend/build/
+frontend/.env
+frontend/.env.*
+frontend/.DS_Store
+
+# General
+*.log
+*.sqlite3
+.DS_Store
+.env
+.env.*
