@@ -89,7 +89,7 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
     setSources([]);
 
     // Call backend for assistant reply
-    fetch("http://localhost:8000/chat", {
+    fetch("https://ai-chatbot-production-2636.up.railway.app/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
