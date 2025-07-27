@@ -23,7 +23,7 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
   const [sources, setSources] = useState([]);
   
   // ✅ FIXED: Use environment variable for the API URL
-  const API_URL = "https://ai-chatbot-production-2636.up.railway.app/";
+  const API_URL = "https://ai-chatbot-production-2636.up.railway.app";
 
   // Load messages for selected conversation
   useEffect(() => {
