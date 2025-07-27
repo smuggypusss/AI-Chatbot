@@ -3,18 +3,16 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+
+origins_regex = r"https://.*\.vercel\.app"
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://ai-chatbot-v7w7-l0e3qcatq-smuggypusss-projects.vercel.app",
-        "http://localhost:5173",
-        "https://ai-chatbot-v7w7-git-main-smuggypusss-projects.vercel.app"
-    ],
+    allow_origin_regex=origins_regex, # Use regex instead of a list
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 from pydantic import BaseModel
 from chat_history_files import (
     load_history_from_s3, save_history_to_s3,
