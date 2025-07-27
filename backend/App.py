@@ -125,7 +125,8 @@ Previous conversation:
 User: "{previous_question}"
 Assistant: "{previous_answer}"
 
-Suggest a clarifying follow-up question to help the user get better information. If you cannot determine a useful follow-up, respond with: "Sorry, could not find any useful information for you this time.""""
+Suggest a clarifying follow-up question to help the user get better information. If you cannot determine a useful follow-up, respond with: "Sorry, could not find any useful information for you this time.
+"""
     
     try:
         response = openai.chat.completions.create(
