@@ -7,7 +7,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://ai-chatbot-v7w7-l0e3qcatq-smuggypusss-projects.vercel.app",
-        "http://localhost:5173"
+        "http://localhost:5173",
+        "https://ai-chatbot-v7w7-git-main-smuggypusss-projects.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
