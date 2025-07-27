@@ -21,9 +21,11 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
   const messagesEndRef = useRef(null);
   const [followUp, setFollowUp] = useState("");
   const [sources, setSources] = useState([]);
+  
+  // ✅ FIXED: Use environment variable for the API URL
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   // Load messages for selected conversation
-
   useEffect(() => {
     if (!convoId || !email) {
       setMessages(initialMessages);
@@ -32,25 +34,19 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
       return;
     }
     setLoadingConvo(true);
-    fetch(`http://localhost:8000/conversation/${convoId}?email=${encodeURIComponent(email)}`)
+    
+    // ✅ FIXED: Use API_URL variable to fetch conversation
+    fetch(`${API_URL}/conversation/${convoId}?email=${encodeURIComponent(email)}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
           const flatMessages = [];
           data.messages.forEach(m => {
             if (m.user) {
-              flatMessages.push({
-                role: "user",
-                content: m.user,
-                time: new Date().toLocaleTimeString(),
-              });
+              flatMessages.push({ role: "user", content: m.user, time: new Date().toLocaleTimeString() });
             }
             if (m.ai) {
-              flatMessages.push({
-                role: "assistant",
-                content: m.ai,
-                time: new Date().toLocaleTimeString(),
-              });
+              flatMessages.push({ role: "assistant", content: m.ai, time: new Date().toLocaleTimeString() });
             }
           });
           setMessages(flatMessages);
@@ -88,8 +84,8 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
     setFollowUp("");
     setSources([]);
 
-    // Call backend for assistant reply
-    fetch("https://ai-chatbot-production-2636.up.railway.app/", {
+    // ✅ FIXED: Use API_URL variable and add the correct "/chat" endpoint
+    fetch(`${API_URL}/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -129,16 +125,14 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
       });
   };
 
-  // Auto-create a conversation if none exists when user focuses input
   const handleInputFocus = async () => {
     if (!convoId && onNewChat) {
       await onNewChat();
     }
   };
 
+  // ... (rest of your JSX code is fine, no changes needed there)
   return (
-    // FIXED: Replaced fixed vh height with a calculation that subtracts the approximate
-    // height of the headers on mobile, while keeping the original desktop calculation.
     <div className="flex flex-col h-[70vh] md:h-[calc(100vh-200px)]">
       <Typography.Title
         level={4}
@@ -169,7 +163,6 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
                         <div>
                           <div style={{ fontWeight: 500, color: "#d4380d" }}>ResQ AI <span style={{ fontSize: 12, color: "#888" }}>{msg.time}</span></div>
                           <div>{msg.content}</div>
-                          {/* Fact-check sources and follow-up suggestion for the latest AI message */}
                           {isLastAssistant && (
                             <>
                               {sources.length > 0 && (
@@ -182,9 +175,7 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
                                         rel="noopener noreferrer"
                                         className="text-blue-600 underline mr-2"
                                       >
-                                        {/*{t('View Source')} (Page {src.page})*/}
                                       </a>
-
                                     </div>
                                   ))}
                                 </div>
