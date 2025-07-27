@@ -29,9 +29,9 @@ load_dotenv()
 EMBEDDING_MODEL = "text-embedding-3-large"
 GPT_MODEL = "gpt-4o"
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-index = faiss.read_index("vector_index.faiss")
-with open("metadata.json", "r", encoding="utf-8") as f:
-    metadata = json.load(f)
+#index = faiss.read_index("vector_index.faiss")
+#with open("metadata.json", "r", encoding="utf-8") as f:
+    #metadata = json.load(f)
 
 
 
