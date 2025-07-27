@@ -77,55 +77,97 @@ def rerank_with_gpt(question, chunks, top_n=4):
 def build_context(chunks):
     return "\n\n---\n\n".join([chunk["full_text"] for chunk in chunks])
 
+def detect_language(text):
+    """Simple language detection - check for common German words/patterns"""
+    german_indicators = ['der', 'die', 'das', 'und', 'ist', 'sind', 'haben', 'können', 'müssen', 'wollen', 'werden', 'sein', 'haben', 'machen', 'gehen', 'kommen', 'sehen', 'hören', 'sprechen', 'denken', 'wissen', 'glauben', 'hoffen', 'lieben', 'leben', 'arbeiten', 'lernen', 'lehren', 'helfen', 'suchen', 'finden', 'geben', 'nehmen', 'bringen', 'holen', 'schicken', 'kaufen', 'verkaufen', 'bezahlen', 'kosten', 'teuer', 'billig', 'gut', 'schlecht', 'groß', 'klein', 'alt', 'jung', 'neu', 'alt', 'schön', 'hässlich', 'stark', 'schwach', 'schnell', 'langsam', 'heiß', 'kalt', 'warm', 'kühl', 'hell', 'dunkel', 'leicht', 'schwer', 'frei', 'gefangen', 'reich', 'arm', 'glücklich', 'traurig', 'froh', 'böse', 'freundlich', 'unfreundlich', 'klug', 'dumm', 'fleißig', 'faul', 'mutig', 'ängstlich', 'ruhig', 'laut', 'still', 'leise', 'sauber', 'schmutzig', 'trocken', 'nass', 'voll', 'leer', 'offen', 'geschlossen', 'richtig', 'falsch', 'wahr', 'unwahr', 'möglich', 'unmöglich', 'nötig', 'unnötig', 'wichtig', 'unwichtig', 'interessant', 'langweilig', 'spannend', 'ruhig', 'hektisch', 'entspannt', 'gestresst', 'zufrieden', 'unzufrieden', 'zufrieden', 'unzufrieden', 'zufrieden', 'unzufrieden']
+    
+    text_lower = text.lower()
+    german_word_count = sum(1 for word in german_indicators if word in text_lower)
+    
+    # If more than 2 German words found, likely German
+    if german_word_count > 2:
+        return "German"
+    return "English"
+
 def generate_answer(context, question, conversation_context):
     previous = "\n".join([f"User: {turn['user']}\nAI: {turn['ai']}" for turn in conversation_context[-3:]])
-    prompt = f"""
-You are a helpful, human-like medical assistant. 
-** IMPORTANT:Must Reply in the same language as the user's question (English or German) If a user asks in English, answer in English. If the user asks in German, then answer in german.**
-- Always answer in a natural, empathetic, and clear way.
-- Use only the provided context below to answer. 
-- If the answer is not in the context, reply with only: No details found.
-- Do not make up or guess any information.
-- If the question is vague, ask for clarification or suggest a follow-up.
+    
+    # Detect the language of the user's question
+    detected_language = detect_language(question)
+    
+    system_message = f"""You are a helpful medical assistant. 
 
-Context:
+CRITICAL LANGUAGE RULE: The user's question is in {detected_language}. You MUST respond in {detected_language} only.
+
+- If the user writes in English → respond in English
+- If the user writes in German → respond in German  
+- If the user writes in any other language → respond in that language
+
+DO NOT mix languages. DO NOT respond in German when the user asks in English.
+
+Use only the provided context to answer. If the answer is not in the context, reply with: "No details found." Do not make up information. Be natural and clear."""
+    
+    user_message = f"""Context:
 {context}
 
 Previous Conversation:
 {previous}
 
-Current Question:
-{question}
-"""
-    response = openai.chat.completions.create(
-        model=GPT_MODEL,
-        messages=[
-            {"role": "system",
-             "content": "You are a helpful medical assistant. Answer concisely and directly from context in the user's language. Extract all relevant facts and details."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.1
-    )
-    return response.choices[0].message.content.strip()
+Current Question (respond in the SAME language as this question):
+{question}"""
+    
+    try:
+        response = openai.chat.completions.create(
+            model=GPT_MODEL,
+            messages=[
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": user_message}
+            ],
+            temperature=0.7,
+            max_tokens=1000
+        )
+        answer = response.choices[0].message.content.strip()
+        
+        # Double-check language consistency
+        answer_language = detect_language(answer)
+        if detected_language == "English" and answer_language == "German":
+            print(f"Language mismatch detected. Question: {detected_language}, Answer: {answer_language}")
+            # Force English response
+            return "I apologize, but I should respond in English. Let me provide the information in English: " + answer
+        
+        return answer
+    except Exception as e:
+        print(f"OpenAI API Error: {e}")
+        return "I'm having trouble processing your request right now. Please try again."
 
 def generate_follow_up(previous_question, previous_answer, current_question, current_answer):
     if "no details found." not in current_answer.lower():
         return ""
-    prompt = f'''The user is asking a follow-up question: "{current_question}",but the assistant found no relevant details
-            The Previous conversation was:
-            User asked:"{previous_question}"
-            Assistant answered:{previous_answer}"
-            Using this context, suggest a clarifying follow-up question
-            If you cannot determine a useful follow-up, just write "Sorry,could not find any useful information for you this time."'''
-    response = openai.chat.completions.create(
-        model=GPT_MODEL,
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant that rewrites vague user questions into clearer ones using prior conversation context."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.2
-    )
-    return response.choices[0].message.content.strip()
+    
+    system_message = """You are a helpful assistant that suggests clarifying follow-up questions when users ask vague questions that can't be answered from the available context."""
+    
+    user_message = f"""The user asked: "{current_question}" but no relevant details were found.
+
+Previous conversation:
+User: "{previous_question}"
+Assistant: "{previous_answer}"
+
+Suggest a clarifying follow-up question to help the user get better information. If you cannot determine a useful follow-up, respond with: "Sorry, could not find any useful information for you this time.
+"""
+    try:
+        response = openai.chat.completions.create(
+            model=GPT_MODEL,
+            messages=[
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": user_message}
+            ],
+            temperature=0.5,
+            max_tokens=200
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"Follow-up generation error: {e}")
+        return ""
 
 import boto3
 from urllib.parse import quote_plus
