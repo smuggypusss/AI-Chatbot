@@ -8,7 +8,7 @@ st.set_page_config(page_title="ResQ AI - Login", page_icon="❤️", layout="cen
 st.title("🔐 ResQ AI Login")
 st.markdown("Emergency Care Intelligence System")
 
-# Optional role override (will be inferred from API response)
+# Optional role override(will be inferred from API response)
 role = st.selectbox("Select User Type", ["Basic", "Admin"])
 username = st.text_input("Email")
 password = st.text_input("Password", type="password")
