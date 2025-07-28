@@ -23,7 +23,7 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
   const [sources, setSources] = useState([]);
   
   // ✅ FIXED: Use environment variable for the API URL
-  const API_URL = "https://ai-chatbot-production-2636.up.railway.app";
+  const API_URL = "https://ai-chatbot-production-dbae.up.railway.app";
 
   // Load messages for selected conversation
   useEffect(() => {
@@ -96,7 +96,12 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
         convo_id: convoId,
       }),
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then((data) => {
         setMessages((msgs) => [
           ...msgs,
@@ -110,12 +115,13 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
         setSources(Array.isArray(data.sources) ? data.sources : []);
         setLoading(false);
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error("Backend error:", error);
         setMessages((msgs) => [
           ...msgs,
           {
             role: "assistant",
-            content: "Error: Could not connect to backend.",
+            content: `Error: ${error.message}. Please check if the backend is running.`,
             time: new Date().toLocaleTimeString(),
           },
         ]);
