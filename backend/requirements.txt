@@ -5,4 +5,5 @@ openai
 faiss-cpu
 numpy
 boto3
+botocore
 pydantic
