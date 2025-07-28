@@ -3,12 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-
-origins_regex = r"https://.*\.vercel\.app"
-
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=origins_regex, # Use regex instead of a list
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -29,9 +27,9 @@ load_dotenv()
 EMBEDDING_MODEL = "text-embedding-3-large"
 GPT_MODEL = "gpt-4o"
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-#index = faiss.read_index("vector_index.faiss")
-#with open("metadata.json", "r", encoding="utf-8") as f:
-    #metadata = json.load(f)
+index = faiss.read_index("vector_index.faiss")
+with open("metadata.json", "r", encoding="utf-8") as f:
+    metadata = json.load(f)
 
 
 
