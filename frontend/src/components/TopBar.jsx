@@ -2,7 +2,8 @@ import React from 'react';
 import { HeartFilled, WarningFilled, MenuOutlined, UserOutlined, LogoutOutlined, MoreOutlined, GlobalOutlined } from '@ant-design/icons';
 import { Dropdown, Menu, Avatar, Select } from 'antd';
 import { useTranslation } from 'react-i18next';
-import allesHealthLogo from '../assets/Alles Health.png';
+import allesHealthLogo from '../assets/hospital_logo.png';
+import allesLogo from '../assets/Alles Health.png';
 
 const MOBILE_TABS = [
   { key: 'ai-assistant', label: 'AI Assistant' },
@@ -73,10 +74,8 @@ export const TopBar = ({ onMenuClick, onMobileNav }) => {
       {/* Full TopBar for desktop */}
       <div className="hidden md:flex justify-between items-center w-full">
         <div className="flex items-center">
-          <img src={allesHealthLogo} alt="Alles Health" style={{ height: 36, marginRight: 18 }} />
-          <div className="bg-red-100 p-2 rounded-lg mr-3 flex items-center justify-center">
-            <HeartFilled className="text-red-500 text-2xl" />
-          </div>
+          <img src={allesLogo} alt="Alles Health" style={{ height: 36, marginRight: 12 }} />
+          <img src={allesHealthLogo} alt="Hospital Logo" style={{ height: 36, marginRight: 18 }} />
           <div>
             <h1 className="text-xl font-bold text-gray-800">ResQ AI</h1>
             <p className="text-sm text-gray-500">{t('Emergency Services AI Agent for Bülach Hospital')}</p>
