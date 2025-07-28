@@ -124,7 +124,7 @@ Previous Conversation:
 Current Question (respond in the SAME language as this question):
 {question}"""
     
-    try:U
+    try:
         response = openai.chat.completions.create(
             model=GPT_MODEL,
             messages=[
