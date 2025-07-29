@@ -4,6 +4,8 @@ import { Dropdown, Menu, Avatar, Select } from 'antd';
 import { useTranslation } from 'react-i18next';
 import allesHealthLogo from '../assets/hospital_logo.png';
 import allesLogo from '../assets/Alles Health.png';
+import usFlag from '../assets/us.png';
+import deFlag from '../assets/de.png';
 
 const MOBILE_TABS = [
   { key: 'ai-assistant', label: 'AI Assistant' },
@@ -90,12 +92,12 @@ export const TopBar = ({ onMenuClick, onMobileNav }) => {
           <Select
             value={i18n.language}
             onChange={lng => i18n.changeLanguage(lng)}
-            style={{ width: 80 }}
+            style={{ width: 110 }}
             size="small"
             suffixIcon={<GlobalOutlined />}
             options={[
-              { value: 'en', label: 'EN' },
-              { value: 'de', label: 'DE' },
+              { value: 'en', label: <span><img src={usFlag} alt="English" style={{ width: 20, height: 14, marginRight: 6, display: 'inline-block', verticalAlign: 'middle' }} />EN</span> },
+              { value: 'de', label: <span><img src={deFlag} alt="German" style={{ width: 20, height: 14, marginRight: 6, display: 'inline-block', verticalAlign: 'middle' }} />DE</span> },
             ]}
           />
 
