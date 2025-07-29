@@ -14,7 +14,7 @@ backend/.DS_Store
 
 # React/Node
 frontend/node_modules/
-frontend/build/
+# frontend/build/
 frontend/.env
 frontend/.env.*
 frontend/.DS_Store
