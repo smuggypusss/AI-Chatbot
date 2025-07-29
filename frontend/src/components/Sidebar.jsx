@@ -63,29 +63,28 @@ export default function Sidebar({
       }}
     >
       <div style={{ width: '100%' }}>
-        {/* Collapse/Expand button - always visible */}
-        <Button
-          type="text"
-          icon={isCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-          onClick={toggleCollapsed}
-          style={{ 
-            position: "absolute", 
-            top: 12, 
-            right: 12, 
-            fontSize: 20,
-            zIndex: 10,
-            background: '#f5f7fa',
-            border: '1px solid #e0e0e0',
-            borderRadius: '50%',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-            width: 36,
-            height: 36,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'background 0.2s',
-          }}
-        />
+        {/* Collapse/Expand button - always visible, in its own header area */}
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', height: 48, marginBottom: 8 }}>
+          <Button
+            type="text"
+            icon={isCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={toggleCollapsed}
+            style={{ 
+              fontSize: 20,
+              zIndex: 10,
+              background: '#f5f7fa',
+              border: '1px solid #e0e0e0',
+              borderRadius: '50%',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+              width: 36,
+              height: 36,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'background 0.2s',
+            }}
+          />
+        </div>
         {!isCollapsed && (
           <div style={{ marginTop: 0, width: "100%", textAlign: "left" }}>
             {/* New Chat Button */}
@@ -153,18 +152,6 @@ export default function Sidebar({
         <div className="w-full flex-col items-center gap-2 pt-4" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <img src={allesHealthLogo} alt="Alles Health" style={{ height: 50, marginBottom: 8 }} />
           <img src={swissDesignedLogo} alt="Swiss Designed" style={{ height: 60 }} />
-        </div>
-      )}
-      {/* Logo at the bottom for desktop, responsive to collapsed state */}
-      {!isMobile && (
-        <div className="w-full flex-col items-center gap-2 pt-4" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          {isCollapsed ? (
-            <Tooltip title="Hospital Logo">
-              <img src={hospitalLogo} alt="Hospital Logo" style={{ height: 32, width: 32, objectFit: 'contain', marginBottom: 8 }} />
-            </Tooltip>
-          ) : (
-            <img src={hospitalLogo} alt="Hospital Logo" style={{ height: 50, marginBottom: 8 }} />
-          )}
         </div>
       )}
     </div>

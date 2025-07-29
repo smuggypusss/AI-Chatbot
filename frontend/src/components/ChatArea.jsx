@@ -25,6 +25,7 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
   const [lastQuestion, setLastQuestion] = useState("");
   const [enhancedContext, setEnhancedContext] = useState("");
   const [showEnhancedContext, setShowEnhancedContext] = useState(false);
+  const [isActiveChat, setIsActiveChat] = useState(true);
   
   // ✅ FIXED: Use environment variable for the API URL
   const API_URL = "https://ai-chatbot-production-dbae.up.railway.app";
@@ -35,9 +36,11 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
       setMessages(initialMessages);
       setFollowUp("");
       setSources([]);
+      setIsActiveChat(false);
       return;
     }
     setLoadingConvo(true);
+    setIsActiveChat(false);
     
     // ✅ FIXED: Use API_URL variable to fetch conversation
     fetch(`${API_URL}/conversation/${convoId}?email=${encodeURIComponent(email)}`)
@@ -60,12 +63,14 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
         setFollowUp("");
         setSources([]);
         setLoadingConvo(false);
+        setIsActiveChat(false);
       })
       .catch(() => {
         setMessages(initialMessages);
         setFollowUp("");
         setSources([]);
         setLoadingConvo(false);
+        setIsActiveChat(false);
       });
     // eslint-disable-next-line
   }, [convoId, clearChatFlag, email]);
@@ -89,6 +94,7 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
     setFollowUp("");
     setSources([]);
     setEnhancedContext("");
+    setIsActiveChat(true);
 
     // Always send basic answer first
     fetch(`${API_URL}/chat`, {
@@ -200,7 +206,8 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
                 msg.role === "assistant" &&
                 idx === messages.length - 1 &&
                 !loading;
-              const isCurrentConvo = convoId && (!msg.convoId || msg.convoId === convoId);
+              // Only show More Context for the latest assistant message in the current session
+              const isCurrentSession = idx === messages.length - 1;
               return (
                 <List.Item style={{ border: "none", padding: 0, display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
                   <div className={`bg-white rounded-lg shadow p-3 mb-2 max-w-[90%] ${msg.role === "user" ? "ml-auto" : "mr-auto"}`} style={{ minWidth: 120 }}>
@@ -240,7 +247,7 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
                                   <b>{t('Follow-up suggestion')}:</b> {followUp}
                                 </div>
                               )}
-                              {msg.content && !msg.content.includes("No details found") && !enhancedContext && isLastAssistant && isCurrentConvo && (
+                              {msg.content && !msg.content.includes("No details found") && !enhancedContext && isLastAssistant && isActiveChat && (
                                 <div className="mt-2">
                                   <Button 
                                     size="small" 
