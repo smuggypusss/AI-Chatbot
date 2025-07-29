@@ -200,6 +200,7 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
                 msg.role === "assistant" &&
                 idx === messages.length - 1 &&
                 !loading;
+              const isCurrentConvo = convoId && (!msg.convoId || msg.convoId === convoId);
               return (
                 <List.Item style={{ border: "none", padding: 0, display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
                   <div className={`bg-white rounded-lg shadow p-3 mb-2 max-w-[90%] ${msg.role === "user" ? "ml-auto" : "mr-auto"}`} style={{ minWidth: 120 }}>
@@ -239,7 +240,7 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
                                   <b>{t('Follow-up suggestion')}:</b> {followUp}
                                 </div>
                               )}
-                              {msg.content && !msg.content.includes("No details found") && !enhancedContext && isLastAssistant && (
+                              {msg.content && !msg.content.includes("No details found") && !enhancedContext && isLastAssistant && isCurrentConvo && (
                                 <div className="mt-2">
                                   <Button 
                                     size="small" 

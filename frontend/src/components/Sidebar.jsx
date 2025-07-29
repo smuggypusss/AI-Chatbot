@@ -72,10 +72,18 @@ export default function Sidebar({
             position: "absolute", 
             top: 12, 
             right: 12, 
-            fontSize: 16,
+            fontSize: 20,
             zIndex: 10,
-            background: 'rgba(255,255,255,0.9)',
-            border: '1px solid #f0f0f0'
+            background: '#f5f7fa',
+            border: '1px solid #e0e0e0',
+            borderRadius: '50%',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+            width: 36,
+            height: 36,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'background 0.2s',
           }}
         />
         {!isCollapsed && (
