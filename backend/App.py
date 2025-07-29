@@ -145,6 +145,7 @@ Current Question (respond in the SAME language as this question):
 
 def enhance_answer_with_context(initial_answer, question, detected_language):
     """Enhance the initial answer with additional context for vague terms."""
+    system_message = f"You MUST respond in {detected_language} only. Do not use any other language."
     enhancement_prompt = f"""The user asked: "{question}"
 Initial answer: "{initial_answer}"
 
@@ -161,7 +162,10 @@ Keep the response concise but informative. Respond in {detected_language} only."
     try:
         response = openai.chat.completions.create(
             model=GPT_MODEL,
-            messages=[{"role": "user", "content": enhancement_prompt}],
+            messages=[
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": enhancement_prompt}
+            ],
             temperature=0.7,
             max_tokens=500
         )
