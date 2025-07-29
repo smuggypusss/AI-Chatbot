@@ -21,6 +21,7 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
   const messagesEndRef = useRef(null);
   const [followUp, setFollowUp] = useState("");
   const [sources, setSources] = useState([]);
+  const [enhanceContext, setEnhanceContext] = useState(false);
   
   // ✅ FIXED: Use environment variable for the API URL
   const API_URL = "https://ai-chatbot-production-dbae.up.railway.app";
@@ -94,6 +95,7 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
         user_input: input,
         email,
         convo_id: convoId,
+        enhance_context: enhanceContext,
       }),
     })
       .then((res) => {
@@ -214,22 +216,36 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
       </div>
       <Divider style={{ margin: "12px 0" }} />
       <div className="bg-white rounded-lg shadow p-2 flex gap-2 items-end">
-        <TextArea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onFocus={handleInputFocus}
-          onPressEnter={e => {
-            if (!e.shiftKey) {
-              e.preventDefault();
-              sendMessage();
-            }
-          }}
-          placeholder={t("Ask about your uploaded protocols, drug dosages, procedures...")}
-          autoSize={{ minRows: 1, maxRows: 4 }}
-          disabled={loading}
-          className="!h-10 flex-1"
-          style={{ resize: "none" }}
-        />
+        <div className="flex flex-col gap-2 flex-1">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="enhance-context"
+              checked={enhanceContext}
+              onChange={(e) => setEnhanceContext(e.target.checked)}
+              className="mr-2"
+            />
+            <label htmlFor="enhance-context" className="text-sm text-gray-600">
+              {t("Include detailed context")}
+            </label>
+          </div>
+          <TextArea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onFocus={handleInputFocus}
+            onPressEnter={e => {
+              if (!e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
+            placeholder={t("Ask about your uploaded protocols, drug dosages, procedures...")}
+            autoSize={{ minRows: 1, maxRows: 4 }}
+            disabled={loading}
+            className="!h-10 flex-1"
+            style={{ resize: "none" }}
+          />
+        </div>
         <Button
           type="primary"
           onClick={sendMessage}
