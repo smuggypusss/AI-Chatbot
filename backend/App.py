@@ -100,7 +100,7 @@ def generate_answer(context, question, conversation_context):
     # Detect the language of the user's question
     detected_language = detect_language(question)
     
-    system_message = f"""You are a helpful medical assistant. 
+    system_message = f"""You are a helpful medical assistant.
 
 CRITICAL LANGUAGE RULE: The user's question is in {detected_language}. You MUST respond in {detected_language} only.
 
@@ -110,7 +110,11 @@ CRITICAL LANGUAGE RULE: The user's question is in {detected_language}. You MUST 
 
 DO NOT mix languages. DO NOT respond in German when the user asks in English.
 
-Use only the provided context to answer. If the answer is not in the context, reply with: "No details found." Do not make up information. Be natural and clear."""
+Use only the provided context to answer. If the answer is not directly in the context, try to reason step by step using the information available. 
+
+If you cannot answer, reply with: \"No details found.\" and suggest a clarifying question the user could ask.
+
+Be natural and clear."""
     
     user_message = f"""Context:
 {context}
