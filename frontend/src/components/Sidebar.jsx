@@ -24,48 +24,60 @@ export default function Sidebar({
   onDeleteChat,
   onClearAllChats,
   forceExpanded = false,
+  collapsed = false,
+  onToggleCollapsed,
 }) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
-  const [collapsed, setCollapsed] = useState(isMobile);
+  const [internalCollapsed, setInternalCollapsed] = useState(isMobile);
+
+  // Use external collapsed state if provided, otherwise use internal state
+  const isCollapsed = onToggleCollapsed ? collapsed : internalCollapsed;
+  const toggleCollapsed = onToggleCollapsed ? onToggleCollapsed : () => setInternalCollapsed(c => !c);
 
   useEffect(() => {
-    if (!isMobile && !forceExpanded) setCollapsed(false); // Always expanded on desktop
+    if (!isMobile && !forceExpanded) setInternalCollapsed(false); // Always expanded on desktop
   }, [isMobile, forceExpanded]);
 
   useEffect(() => {
-    if (forceExpanded) setCollapsed(false);
+    if (forceExpanded) setInternalCollapsed(false);
   }, [forceExpanded]);
 
   return (
     <div
       style={{
-        width: collapsed ? 60 : 260,
+        width: isCollapsed ? 60 : 260,
         background: "#fff",
-        padding: collapsed ? "16px 8px" : 24,
+        padding: isCollapsed ? "16px 8px" : 24,
         borderRadius: 12,
         minHeight: 340,
         boxShadow: "0 2px 12px #f0f1f2",
         transition: "width 0.2s cubic-bezier(.4,0,.2,1)",
         display: "flex",
         flexDirection: "column",
-        alignItems: collapsed ? "center" : "flex-start",
+        alignItems: isCollapsed ? "center" : "flex-start",
         position: "relative",
         height: '100%',
         justifyContent: 'space-between',
       }}
     >
       <div style={{ width: '100%' }}>
-        {/* Collapse/Expand button only on mobile and not forced expanded */}
-        {isMobile && !forceExpanded && (
-          <Button
-            type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed((c) => !c)}
-            style={{ position: "absolute", top: 12, right: 12, fontSize: 20 }}
-          />
-        )}
-        {!collapsed && (
+        {/* Collapse/Expand button - always visible */}
+        <Button
+          type="text"
+          icon={isCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+          onClick={toggleCollapsed}
+          style={{ 
+            position: "absolute", 
+            top: 12, 
+            right: 12, 
+            fontSize: 16,
+            zIndex: 10,
+            background: 'rgba(255,255,255,0.9)',
+            border: '1px solid #f0f0f0'
+          }}
+        />
+        {!isCollapsed && (
           <div style={{ marginTop: 0, width: "100%", textAlign: "left" }}>
             {/* New Chat Button */}
             <Button
