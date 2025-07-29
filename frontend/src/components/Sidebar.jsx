@@ -4,6 +4,7 @@ import { MenuFoldOutlined, MenuUnfoldOutlined, PlusOutlined, DeleteOutlined, Mes
 import { useTranslation } from "react-i18next";
 import allesHealthLogo from '../assets/Alles Health.png';
 import swissDesignedLogo from '../assets/Swiss_Designed_White.png';
+import hospitalLogo from '../assets/hospital_logo.png';
 
 function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < breakpoint);
@@ -144,6 +145,18 @@ export default function Sidebar({
         <div className="w-full flex-col items-center gap-2 pt-4" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <img src={allesHealthLogo} alt="Alles Health" style={{ height: 50, marginBottom: 8 }} />
           <img src={swissDesignedLogo} alt="Swiss Designed" style={{ height: 60 }} />
+        </div>
+      )}
+      {/* Logo at the bottom for desktop, responsive to collapsed state */}
+      {!isMobile && (
+        <div className="w-full flex-col items-center gap-2 pt-4" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          {isCollapsed ? (
+            <Tooltip title="Hospital Logo">
+              <img src={hospitalLogo} alt="Hospital Logo" style={{ height: 32, width: 32, objectFit: 'contain', marginBottom: 8 }} />
+            </Tooltip>
+          ) : (
+            <img src={hospitalLogo} alt="Hospital Logo" style={{ height: 50, marginBottom: 8 }} />
+          )}
         </div>
       )}
     </div>

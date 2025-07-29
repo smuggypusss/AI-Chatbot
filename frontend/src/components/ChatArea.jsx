@@ -239,7 +239,7 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
                                   <b>{t('Follow-up suggestion')}:</b> {followUp}
                                 </div>
                               )}
-                              {msg.content && !msg.content.includes("No details found") && !enhancedContext && (
+                              {msg.content && !msg.content.includes("No details found") && !enhancedContext && isLastAssistant && (
                                 <div className="mt-2">
                                   <Button 
                                     size="small" 
