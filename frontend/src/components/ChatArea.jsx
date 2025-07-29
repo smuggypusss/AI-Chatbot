@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Input, Button, List, Avatar, Typography, Divider, Spin } from "antd";
+import { Input, Button, List, Avatar, Typography, Divider, Spin, Select } from "antd";
 import { useTranslation } from 'react-i18next';
 import robotImg from "../assets/robot.png";
 const { TextArea } = Input;
+const { Option } = Select;
 
 export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
   const { t } = useTranslation();
@@ -166,11 +167,19 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
                 <List.Item style={{ border: "none", padding: 0, display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
                   <div className={`bg-white rounded-lg shadow p-3 mb-2 max-w-[90%] ${msg.role === "user" ? "ml-auto" : "mr-auto"}`} style={{ minWidth: 120 }}>
                     {msg.role === "assistant" ? (
-                      <div style={{ display: "flex", alignItems: "flex-start" }}>
-                        <Avatar src={robotImg} style={{ background: "#faad14", marginRight: 8 }} />
-                        <div>
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                        <Avatar 
+                          src={robotImg} 
+                          style={{ 
+                            background: "#faad14", 
+                            flexShrink: 0,
+                            width: "32px",
+                            height: "32px"
+                          }} 
+                        />
+                        <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontWeight: 500, color: "#d4380d" }}>ResQ AI <span style={{ fontSize: 12, color: "#888" }}>{msg.time}</span></div>
-                          <div>{msg.content}</div>
+                          <div style={{ wordBreak: "break-word" }}>{msg.content}</div>
                           {isLastAssistant && (
                             <>
                               {sources.length > 0 && (
@@ -218,16 +227,15 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
       <div className="bg-white rounded-lg shadow p-2 flex gap-2 items-end">
         <div className="flex flex-col gap-2 flex-1">
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="enhance-context"
-              checked={enhanceContext}
-              onChange={(e) => setEnhanceContext(e.target.checked)}
-              className="mr-2"
-            />
-            <label htmlFor="enhance-context" className="text-sm text-gray-600">
-              {t("Include detailed context")}
-            </label>
+            <Select
+              value={enhanceContext ? "enhanced" : "standard"}
+              onChange={(value) => setEnhanceContext(value === "enhanced")}
+              style={{ width: 150 }}
+              size="small"
+            >
+              <Option value="standard">{t("Standard Answer")}</Option>
+              <Option value="enhanced">{t("Enhanced Context")}</Option>
+            </Select>
           </div>
           <TextArea
             value={input}
