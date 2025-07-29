@@ -41,6 +41,7 @@ class ChatRequest(BaseModel):
     user_input: str
     email: str
     convo_id: str = None
+    enhance_context: bool = False
 
 class NewConvoRequest(BaseModel):
     email: str
@@ -99,7 +100,7 @@ def generate_answer(context, question, conversation_context):
     # Detect the language of the user's question
     detected_language = detect_language(question)
     
-    system_message = f"""You are a helpful medical assistant.
+    system_message = f"""You are a helpful medical assistant. 
 
 CRITICAL LANGUAGE RULE: The user's question is in {detected_language}. You MUST respond in {detected_language} only.
 
@@ -109,11 +110,7 @@ CRITICAL LANGUAGE RULE: The user's question is in {detected_language}. You MUST 
 
 DO NOT mix languages. DO NOT respond in German when the user asks in English.
 
-Use only the provided context to answer. If the answer is not directly in the context, try to reason step by step using the information available. 
-
-If you cannot answer, reply with: \"No details found.\" and suggest a clarifying question the user could ask.
-
-Be natural and clear."""
+Use only the provided context to answer. If the answer is not in the context, reply with: "No details found." Do not make up information. Be natural and clear."""
     
     user_message = f"""Context:
 {context}
@@ -147,6 +144,45 @@ Current Question (respond in the SAME language as this question):
     except Exception as e:
         print(f"OpenAI API Error: {e}")
         return "I'm having trouble processing your request right now. Please try again."
+
+def enhance_answer_with_context(initial_answer, question, detected_language):
+    """Enhance the initial answer with additional context for vague terms."""
+    enhancement_prompt = f"""The user asked: "{question}"
+Initial answer: "{initial_answer}"
+
+Please provide additional context to clarify any vague terms in the answer. Focus on:
+- What types of hours count (academic, practical, online, etc.)
+- What "externally" means specifically
+- Any restrictions or requirements
+- Examples of qualifying activities
+- Specific details about procedures or processes mentioned
+
+Keep the response concise but informative. Respond in {detected_language} only."""
+    
+    try:
+        response = openai.chat.completions.create(
+            model=GPT_MODEL,
+            messages=[{"role": "user", "content": enhancement_prompt}],
+            temperature=0.7,
+            max_tokens=500
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"Enhancement API Error: {e}")
+        return ""
+
+def generate_enhanced_answer(context, question, conversation_context, enhance_context=False):
+    """Generate answer with optional two-stage enhancement."""
+    # Get initial answer
+    initial_answer = generate_answer(context, question, conversation_context)
+    
+    # Only enhance if user specifically requests it AND the answer is not "no details found"
+    if enhance_context and "no details found" not in initial_answer.lower():
+        enhanced_context = enhance_answer_with_context(initial_answer, question, detect_language(question))
+        if enhanced_context and enhanced_context != initial_answer:
+            return f"{initial_answer}\n\nAdditional Context:\n{enhanced_context}"
+    
+    return initial_answer
 
 def generate_follow_up(previous_question, previous_answer, current_question, current_answer):
     if "no details found." not in current_answer.lower():
@@ -242,7 +278,7 @@ def chat_endpoint(req: ChatRequest):
     context = build_context(reranked_chunks)
 
     # Generate answer
-    answer = generate_answer(context, user_input, conversation_context)
+    answer = generate_enhanced_answer(context, user_input, conversation_context, req.enhance_context)
 
     # Follow-up suggestion if answer is vague
     follow_up = ""
