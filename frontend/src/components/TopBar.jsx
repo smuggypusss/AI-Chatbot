@@ -74,8 +74,8 @@ export const TopBar = ({ onMenuClick, onMobileNav }) => {
       {/* Full TopBar for desktop */}
       <div className="hidden md:flex justify-between items-center w-full">
         <div className="flex items-center">
-          <img src={allesLogo} alt="Alles Health" style={{ height: 36, marginRight: 12 }} />
-          <img src={allesHealthLogo} alt="Hospital Logo" style={{ height: 36, marginRight: 18 }} />
+          <img src={allesHealthLogo} alt="Hospital Logo" style={{ height: 36, marginRight: 12 }} />
+          <img src={allesLogo} alt="Alles Health" style={{ height: 36, marginRight: 18 }} />
           <div>
             <h1 className="text-xl font-bold text-gray-800">ResQ AI</h1>
             <p className="text-sm text-gray-500">{t('Emergency Services AI Agent for Bülach Hospital')}</p>
