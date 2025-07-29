@@ -22,7 +22,8 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
   const messagesEndRef = useRef(null);
   const [followUp, setFollowUp] = useState("");
   const [sources, setSources] = useState([]);
-  const [enhanceContext, setEnhanceContext] = useState(false);
+  const [lastQuestion, setLastQuestion] = useState("");
+  const [enhancedContext, setEnhancedContext] = useState("");
   
   // ✅ FIXED: Use environment variable for the API URL
   const API_URL = "https://ai-chatbot-production-dbae.up.railway.app";
@@ -81,12 +82,14 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
       time: new Date().toLocaleTimeString(),
     };
     setMessages((msgs) => [...msgs, userMsg]);
+    setLastQuestion(input);
     setInput("");
     setLoading(true);
     setFollowUp("");
     setSources([]);
+    setEnhancedContext("");
 
-    // ✅ FIXED: Use API_URL variable and add the correct "/chat" endpoint
+    // Always send basic answer first
     fetch(`${API_URL}/chat`, {
       method: "POST",
       headers: {
@@ -96,7 +99,7 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
         user_input: input,
         email,
         convo_id: convoId,
-        enhance_context: enhanceContext,
+        enhance_context: false, // Always get basic answer first
       }),
     })
       .then((res) => {
@@ -137,6 +140,34 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
   const handleInputFocus = async () => {
     if (!convoId && onNewChat) {
       await onNewChat();
+    }
+  };
+
+  const getEnhancedContext = async () => {
+    if (!lastQuestion || !convoId) return;
+    
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/enhance_context`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_input: lastQuestion,
+          email,
+          convo_id: convoId,
+        }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setEnhancedContext(data.enhanced_context);
+      }
+    } catch (error) {
+      console.error("Error getting enhanced context:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -202,6 +233,24 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
                                   <b>{t('Follow-up suggestion')}:</b> {followUp}
                                 </div>
                               )}
+                              {msg.content && !msg.content.includes("No details found") && (
+                                <div className="mt-2">
+                                  <Button 
+                                    size="small" 
+                                    type="dashed"
+                                    onClick={getEnhancedContext}
+                                    loading={loading}
+                                  >
+                                    {t("More Context")}
+                                  </Button>
+                                </div>
+                              )}
+                              {enhancedContext && (
+                                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded">
+                                  <div className="font-semibold text-blue-800 mb-2">Additional Context:</div>
+                                  <div className="text-sm text-blue-700 whitespace-pre-line">{enhancedContext}</div>
+                                </div>
+                              )}
                             </>
                           )}
                         </div>
@@ -225,35 +274,22 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
       </div>
       <Divider style={{ margin: "12px 0" }} />
       <div className="bg-white rounded-lg shadow p-2 flex gap-2 items-end">
-        <div className="flex flex-col gap-2 flex-1">
-          <div className="flex items-center gap-2">
-            <Select
-              value={enhanceContext ? "enhanced" : "standard"}
-              onChange={(value) => setEnhanceContext(value === "enhanced")}
-              style={{ width: 150 }}
-              size="small"
-            >
-              <Option value="standard">{t("Standard Answer")}</Option>
-              <Option value="enhanced">{t("Enhanced Context")}</Option>
-            </Select>
-          </div>
-          <TextArea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onFocus={handleInputFocus}
-            onPressEnter={e => {
-              if (!e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-              }
-            }}
-            placeholder={t("Ask about your uploaded protocols, drug dosages, procedures...")}
-            autoSize={{ minRows: 1, maxRows: 4 }}
-            disabled={loading}
-            className="!h-10 flex-1"
-            style={{ resize: "none" }}
-          />
-        </div>
+        <TextArea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onFocus={handleInputFocus}
+          onPressEnter={e => {
+            if (!e.shiftKey) {
+              e.preventDefault();
+              sendMessage();
+            }
+          }}
+          placeholder={t("Ask about your uploaded protocols, drug dosages, procedures...")}
+          autoSize={{ minRows: 1, maxRows: 4 }}
+          disabled={loading}
+          className="!h-10 flex-1"
+          style={{ resize: "none" }}
+        />
         <Button
           type="primary"
           onClick={sendMessage}
