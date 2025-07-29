@@ -41,6 +41,7 @@ class ChatRequest(BaseModel):
     user_input: str
     email: str
     convo_id: str = None
+    enhance_context: bool = False
 
 class NewConvoRequest(BaseModel):
     email: str
@@ -148,6 +149,47 @@ Current Question (respond in the SAME language as this question):
         print(f"OpenAI API Error: {e}")
         return "I'm having trouble processing your request right now. Please try again."
 
+def enhance_answer_with_context(initial_answer, question, detected_language):
+    """Enhance the initial answer with additional context for vague terms."""
+    enhancement_prompt = f"""The user asked: "{question}"
+Initial answer: "{initial_answer}"
+
+Please provide additional context to clarify any vague terms in the answer. Focus on:
+- What types of hours count (academic, practical, online, etc.)
+- What "externally" means specifically
+- Any restrictions or requirements
+- Examples of qualifying activities
+- Specific details about procedures or processes mentioned
+
+Format the response as a clean, well-structured list with clear headings. Use bullet points and proper spacing.
+
+Keep the response concise but informative. Respond in {detected_language} only."""
+    
+    try:
+        response = openai.chat.completions.create(
+            model=GPT_MODEL,
+            messages=[{"role": "user", "content": enhancement_prompt}],
+            temperature=0.7,
+            max_tokens=500
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"Enhancement API Error: {e}")
+        return ""
+
+def generate_enhanced_answer(context, question, conversation_context, enhance_context=False):
+    """Generate answer with optional two-stage enhancement."""
+    # Get initial answer
+    initial_answer = generate_answer(context, question, conversation_context)
+    
+    # Only enhance if user specifically requests it AND the answer is not "no details found"
+    if enhance_context and "no details found" not in initial_answer.lower():
+        enhanced_context = enhance_answer_with_context(initial_answer, question, detect_language(question))
+        if enhanced_context and enhanced_context != initial_answer:
+            return f"{initial_answer}\n\n**Additional Context:**\n{enhanced_context}"
+    
+    return initial_answer
+
 def generate_follow_up(previous_question, previous_answer, current_question, current_answer):
     if "no details found." not in current_answer.lower():
         return ""
@@ -242,7 +284,7 @@ def chat_endpoint(req: ChatRequest):
     context = build_context(reranked_chunks)
 
     # Generate answer
-    answer = generate_answer(context, user_input, conversation_context)
+    answer = generate_enhanced_answer(context, user_input, conversation_context, req.enhance_context)
 
     # Follow-up suggestion if answer is vague
     follow_up = ""
@@ -259,6 +301,41 @@ def chat_endpoint(req: ChatRequest):
         "sources": unique_citations,
         "follow_up": follow_up,
         "convo_id": convo_id
+    }
+
+@app.post("/enhance_context")
+def enhance_context_endpoint(req: ChatRequest):
+    """Separate endpoint to get enhanced context on-demand."""
+    username = req.email
+    user_input = req.user_input
+    
+    # Get conversation context
+    conversation_context = []
+    if req.convo_id:
+        convo = get_conversation(username, req.convo_id)
+        if convo and convo.get("messages"):
+            conversation_context = convo["messages"]
+    
+    # Get basic answer first
+    chunks = retrieve_chunks(user_input)
+    reranked_chunks = rerank_with_gpt(user_input, chunks)
+    context = build_context(reranked_chunks)
+    
+    # Generate basic answer
+    basic_answer = generate_answer(context, user_input, conversation_context)
+    
+    # Generate enhanced context
+    if "no details found" not in basic_answer.lower():
+        enhanced_context = enhance_answer_with_context(basic_answer, user_input, detect_language(user_input))
+        if enhanced_context:
+            return {
+                "basic_answer": basic_answer,
+                "enhanced_context": enhanced_context
+            }
+    
+    return {
+        "basic_answer": basic_answer,
+        "enhanced_context": "No additional context available."
     }
 
 @app.post("/clear_history")

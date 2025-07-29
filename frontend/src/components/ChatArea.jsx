@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Input, Button, List, Avatar, Typography, Divider, Spin } from "antd";
+import { Input, Button, List, Avatar, Typography, Divider, Spin, Select } from "antd";
 import { useTranslation } from 'react-i18next';
 import robotImg from "../assets/robot.png";
 const { TextArea } = Input;
+const { Option } = Select;
 
 export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
   const { t } = useTranslation();
@@ -21,6 +22,10 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
   const messagesEndRef = useRef(null);
   const [followUp, setFollowUp] = useState("");
   const [sources, setSources] = useState([]);
+  const [lastQuestion, setLastQuestion] = useState("");
+  const [enhancedContext, setEnhancedContext] = useState("");
+  const [showEnhancedContext, setShowEnhancedContext] = useState(false);
+  const [isActiveChat, setIsActiveChat] = useState(true);
   
   // ✅ FIXED: Use environment variable for the API URL
   const API_URL = "https://ai-chatbot-production-dbae.up.railway.app";
@@ -31,9 +36,11 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
       setMessages(initialMessages);
       setFollowUp("");
       setSources([]);
+      setIsActiveChat(false);
       return;
     }
     setLoadingConvo(true);
+    setIsActiveChat(false);
     
     // ✅ FIXED: Use API_URL variable to fetch conversation
     fetch(`${API_URL}/conversation/${convoId}?email=${encodeURIComponent(email)}`)
@@ -56,12 +63,14 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
         setFollowUp("");
         setSources([]);
         setLoadingConvo(false);
+        setIsActiveChat(false);
       })
       .catch(() => {
         setMessages(initialMessages);
         setFollowUp("");
         setSources([]);
         setLoadingConvo(false);
+        setIsActiveChat(false);
       });
     // eslint-disable-next-line
   }, [convoId, clearChatFlag, email]);
@@ -79,12 +88,15 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
       time: new Date().toLocaleTimeString(),
     };
     setMessages((msgs) => [...msgs, userMsg]);
+    setLastQuestion(input);
     setInput("");
     setLoading(true);
     setFollowUp("");
     setSources([]);
+    setEnhancedContext("");
+    setIsActiveChat(true);
 
-    // ✅ FIXED: Use API_URL variable and add the correct "/chat" endpoint
+    // Always send basic answer first
     fetch(`${API_URL}/chat`, {
       method: "POST",
       headers: {
@@ -94,6 +106,7 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
         user_input: input,
         email,
         convo_id: convoId,
+        enhance_context: false, // Always get basic answer first
       }),
     })
       .then((res) => {
@@ -137,6 +150,39 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
     }
   };
 
+  const getEnhancedContext = async () => {
+    if (!lastQuestion || !convoId) return;
+    
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/enhance_context`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_input: lastQuestion,
+          email,
+          convo_id: convoId,
+        }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setEnhancedContext(data.enhanced_context);
+        setShowEnhancedContext(true);
+      }
+    } catch (error) {
+      console.error("Error getting enhanced context:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleEnhancedContext = () => {
+    setShowEnhancedContext(!showEnhancedContext);
+  };
+
   // ... (rest of your JSX code is fine, no changes needed there)
   return (
     <div className="flex flex-col h-[70vh] md:h-[calc(100vh-200px)]">
@@ -160,15 +206,25 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
                 msg.role === "assistant" &&
                 idx === messages.length - 1 &&
                 !loading;
+              // Only show More Context for the latest assistant message in the current session
+              const isCurrentSession = idx === messages.length - 1;
               return (
                 <List.Item style={{ border: "none", padding: 0, display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
                   <div className={`bg-white rounded-lg shadow p-3 mb-2 max-w-[90%] ${msg.role === "user" ? "ml-auto" : "mr-auto"}`} style={{ minWidth: 120 }}>
                     {msg.role === "assistant" ? (
-                      <div style={{ display: "flex", alignItems: "flex-start" }}>
-                        <Avatar src={robotImg} style={{ background: "#faad14", marginRight: 8 }} />
-                        <div>
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                        <Avatar 
+                          src={robotImg} 
+                          style={{ 
+                            background: "#faad14", 
+                            flexShrink: 0,
+                            width: "32px",
+                            height: "32px"
+                          }} 
+                        />
+                        <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontWeight: 500, color: "#d4380d" }}>ResQ AI <span style={{ fontSize: 12, color: "#888" }}>{msg.time}</span></div>
-                          <div>{msg.content}</div>
+                          <div style={{ wordBreak: "break-word" }}>{msg.content}</div>
                           {isLastAssistant && (
                             <>
                               {sources.length > 0 && (
@@ -189,6 +245,47 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
                               {followUp && (
                                 <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
                                   <b>{t('Follow-up suggestion')}:</b> {followUp}
+                                </div>
+                              )}
+                              {msg.content && !msg.content.includes("No details found") && !enhancedContext && isLastAssistant && isActiveChat && (
+                                <div className="mt-2">
+                                  <Button 
+                                    size="small" 
+                                    type="dashed"
+                                    onClick={getEnhancedContext}
+                                    loading={loading}
+                                  >
+                                    {t("More Context")}
+                                  </Button>
+                                </div>
+                              )}
+                              {enhancedContext && (
+                                <div className="mt-2">
+                                  <Button 
+                                    size="small" 
+                                    type="text"
+                                    onClick={toggleEnhancedContext}
+                                    style={{ color: '#1890ff', padding: '4px 8px' }}
+                                  >
+                                    {showEnhancedContext ? t("Hide Context") : t("Show Context")}
+                                  </Button>
+                                  {showEnhancedContext && (
+                                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded">
+                                      <div className="font-semibold text-blue-800 mb-2">Additional Context:</div>
+                                      <div 
+                                        className="text-sm text-blue-700"
+                                        dangerouslySetInnerHTML={{ 
+                                          __html: enhancedContext
+                                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                                            .replace(/### (.*?)\n/g, '<h3 class="text-blue-800 font-semibold mb-2">$1</h3>')
+                                            .replace(/\n- (.*?)(?=\n|$)/g, '<li>$1</li>')
+                                            .replace(/(<li>.*?<\/li>)/s, '<ul class="list-disc ml-4 mb-2">$1</ul>')
+                                            .replace(/\n\n/g, '<br>')
+                                        }}
+                                      />
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </>

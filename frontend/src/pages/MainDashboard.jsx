@@ -22,6 +22,7 @@ export default function MainDashboard() {
   const [selectedConvoId, setSelectedConvoId] = useState(null);
   const [clearChatFlag, setClearChatFlag] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState(TABS[0]);
   const user = JSON.parse(localStorage.getItem("user"));
   const email = user?.email;
@@ -130,7 +131,7 @@ export default function MainDashboard() {
         {activeTab === "ai-assistant" ? (
           <div className="bg-white rounded-lg mt-4 p-2 md:p-6 min-h-[400px] flex flex-col md:flex-row gap-4 md:gap-6">
             {/* Sidebar (desktop only) */}
-            <div className="hidden md:block w-[260px] flex-shrink-0">
+            <div className="hidden md:block flex-shrink-0" style={{ width: sidebarCollapsed ? 60 : 260 }}>
               <Sidebar
                 conversations={conversations}
                 selectedConvoId={selectedConvoId}
@@ -138,6 +139,8 @@ export default function MainDashboard() {
                 onNewChat={handleNewChat}
                 onDeleteChat={handleDeleteChat}
                 onClearAllChats={handleClearAllChats}
+                collapsed={sidebarCollapsed}
+                onToggleCollapsed={() => setSidebarCollapsed(!sidebarCollapsed)}
               />
             </div>
             {/* Chat area always visible */}

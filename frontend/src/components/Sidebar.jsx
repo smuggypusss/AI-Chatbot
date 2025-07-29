@@ -4,6 +4,7 @@ import { MenuFoldOutlined, MenuUnfoldOutlined, PlusOutlined, DeleteOutlined, Mes
 import { useTranslation } from "react-i18next";
 import allesHealthLogo from '../assets/Alles Health.png';
 import swissDesignedLogo from '../assets/Swiss_Designed_White.png';
+import hospitalLogo from '../assets/hospital_logo.png';
 
 function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < breakpoint);
@@ -24,48 +25,67 @@ export default function Sidebar({
   onDeleteChat,
   onClearAllChats,
   forceExpanded = false,
+  collapsed = false,
+  onToggleCollapsed,
 }) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
-  const [collapsed, setCollapsed] = useState(isMobile);
+  const [internalCollapsed, setInternalCollapsed] = useState(isMobile);
+
+  // Use external collapsed state if provided, otherwise use internal state
+  const isCollapsed = onToggleCollapsed ? collapsed : internalCollapsed;
+  const toggleCollapsed = onToggleCollapsed ? onToggleCollapsed : () => setInternalCollapsed(c => !c);
 
   useEffect(() => {
-    if (!isMobile && !forceExpanded) setCollapsed(false); // Always expanded on desktop
+    if (!isMobile && !forceExpanded) setInternalCollapsed(false); // Always expanded on desktop
   }, [isMobile, forceExpanded]);
 
   useEffect(() => {
-    if (forceExpanded) setCollapsed(false);
+    if (forceExpanded) setInternalCollapsed(false);
   }, [forceExpanded]);
 
   return (
     <div
       style={{
-        width: collapsed ? 60 : 260,
+        width: isCollapsed ? 60 : 260,
         background: "#fff",
-        padding: collapsed ? "16px 8px" : 24,
+        padding: isCollapsed ? "16px 8px" : 24,
         borderRadius: 12,
         minHeight: 340,
         boxShadow: "0 2px 12px #f0f1f2",
         transition: "width 0.2s cubic-bezier(.4,0,.2,1)",
         display: "flex",
         flexDirection: "column",
-        alignItems: collapsed ? "center" : "flex-start",
+        alignItems: isCollapsed ? "center" : "flex-start",
         position: "relative",
         height: '100%',
         justifyContent: 'space-between',
       }}
     >
       <div style={{ width: '100%' }}>
-        {/* Collapse/Expand button only on mobile and not forced expanded */}
-        {isMobile && !forceExpanded && (
+        {/* Collapse/Expand button - always visible, in its own header area */}
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', height: 48, marginBottom: 8 }}>
           <Button
             type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed((c) => !c)}
-            style={{ position: "absolute", top: 12, right: 12, fontSize: 20 }}
+            icon={isCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={toggleCollapsed}
+            style={{ 
+              fontSize: 20,
+              zIndex: 10,
+              background: '#f5f7fa',
+              border: '1px solid #e0e0e0',
+              borderRadius: '50%',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+              width: 36,
+              height: 36,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'background 0.2s',
+            }}
           />
-        )}
-        {!collapsed && (
+        </div>
+        {!isCollapsed && (
           <div style={{ marginTop: 0, width: "100%", textAlign: "left" }}>
             {/* New Chat Button */}
             <Button
