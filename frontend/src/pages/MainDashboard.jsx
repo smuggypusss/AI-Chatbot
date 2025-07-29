@@ -6,6 +6,8 @@ import Sidebar from "../components/Sidebar";
 import { Drawer } from "antd";
 import Footer from "../components/Footer";
 
+const API_URL = "https://ai-chatbot-production-dbae.up.railway.app";
+
 const TABS = [
   "ai-assistant",
   "protocols",
@@ -27,7 +29,7 @@ export default function MainDashboard() {
   // Fetch conversations
   const fetchConversations = async () => {
     if (!email) return;
-    let data = await (await fetch(`https://ai-chatbot-production-dbae.up.railway.app/conversations?email=${encodeURIComponent(email)}`)).json();
+    let data = await (await fetch(`${API_URL}/conversations?email=${encodeURIComponent(email)}`)).json();
     if (!Array.isArray(data)) data = [];
     setConversations(data);
     // Auto-select first if none selected
@@ -43,7 +45,7 @@ export default function MainDashboard() {
   // New Chat
   const handleNewChat = async () => {
     if (!email) return;
-    const res = await fetch("https://ai-chatbot-production-dbae.up.railway.app/new_conversation", {
+    const res = await fetch(`${API_URL}/new_conversation`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
@@ -65,7 +67,7 @@ export default function MainDashboard() {
   // Delete Chat
   const handleDeleteChat = async (id) => {
     if (!email) return;
-    await fetch(`https://ai-chatbot-production-dbae.up.railway.app/conversation/${id}?email=${encodeURIComponent(email)}`, {
+    await fetch(`${API_URL}/conversation/${id}?email=${encodeURIComponent(email)}`, {
       method: "DELETE",
     });
     fetchConversations();
@@ -79,7 +81,7 @@ export default function MainDashboard() {
   // Clear all chats
   const handleClearAllChats = async () => {
     if (!email) return;
-    await fetch("https://ai-chatbot-production-dbae.up.railway.app/clear_history", {
+    await fetch(`${API_URL}/clear_history`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
