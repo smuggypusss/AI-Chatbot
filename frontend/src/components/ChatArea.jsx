@@ -24,6 +24,7 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
   const [sources, setSources] = useState([]);
   const [lastQuestion, setLastQuestion] = useState("");
   const [enhancedContext, setEnhancedContext] = useState("");
+  const [showEnhancedContext, setShowEnhancedContext] = useState(false);
   
   // ✅ FIXED: Use environment variable for the API URL
   const API_URL = "https://ai-chatbot-production-dbae.up.railway.app";
@@ -163,12 +164,17 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
       if (response.ok) {
         const data = await response.json();
         setEnhancedContext(data.enhanced_context);
+        setShowEnhancedContext(true);
       }
     } catch (error) {
       console.error("Error getting enhanced context:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleEnhancedContext = () => {
+    setShowEnhancedContext(!showEnhancedContext);
   };
 
   // ... (rest of your JSX code is fine, no changes needed there)
@@ -233,7 +239,7 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
                                   <b>{t('Follow-up suggestion')}:</b> {followUp}
                                 </div>
                               )}
-                              {msg.content && !msg.content.includes("No details found") && (
+                              {msg.content && !msg.content.includes("No details found") && !enhancedContext && (
                                 <div className="mt-2">
                                   <Button 
                                     size="small" 
@@ -246,9 +252,32 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
                                 </div>
                               )}
                               {enhancedContext && (
-                                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded">
-                                  <div className="font-semibold text-blue-800 mb-2">Additional Context:</div>
-                                  <div className="text-sm text-blue-700 whitespace-pre-line">{enhancedContext}</div>
+                                <div className="mt-2">
+                                  <Button 
+                                    size="small" 
+                                    type="text"
+                                    onClick={toggleEnhancedContext}
+                                    style={{ color: '#1890ff', padding: '4px 8px' }}
+                                  >
+                                    {showEnhancedContext ? t("Hide Context") : t("Show Context")}
+                                  </Button>
+                                  {showEnhancedContext && (
+                                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded">
+                                      <div className="font-semibold text-blue-800 mb-2">Additional Context:</div>
+                                      <div 
+                                        className="text-sm text-blue-700"
+                                        dangerouslySetInnerHTML={{ 
+                                          __html: enhancedContext
+                                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                                            .replace(/### (.*?)\n/g, '<h3 class="text-blue-800 font-semibold mb-2">$1</h3>')
+                                            .replace(/\n- (.*?)(?=\n|$)/g, '<li>$1</li>')
+                                            .replace(/(<li>.*?<\/li>)/s, '<ul class="list-disc ml-4 mb-2">$1</ul>')
+                                            .replace(/\n\n/g, '<br>')
+                                        }}
+                                      />
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </>
