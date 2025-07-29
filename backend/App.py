@@ -96,10 +96,8 @@ def detect_language(text):
 
 def generate_answer(context, question, conversation_context):
     previous = "\n".join([f"User: {turn['user']}\nAI: {turn['ai']}" for turn in conversation_context[-3:]])
-    
     # Detect the language of the user's question
     detected_language = detect_language(question)
-    
     system_message = f"""You are a helpful medical assistant.
 
 CRITICAL LANGUAGE RULE: The user's question is in {detected_language}. You MUST respond in {detected_language} only.
@@ -115,7 +113,6 @@ Use only the provided context to answer. If the answer is not directly in the co
 If you cannot answer, reply with: \"No details found.\" and suggest a clarifying question the user could ask.
 
 Be natural and clear."""
-    
     user_message = f"""Context:
 {context}
 
@@ -124,7 +121,6 @@ Previous Conversation:
 
 Current Question (respond in the SAME language as this question):
 {question}"""
-    
     try:
         response = openai.chat.completions.create(
             model=GPT_MODEL,
@@ -136,14 +132,12 @@ Current Question (respond in the SAME language as this question):
             max_tokens=1000
         )
         answer = response.choices[0].message.content.strip()
-        
         # Double-check language consistency
         answer_language = detect_language(answer)
-        if detected_language == "English" and answer_language == "German":
+        # Only force a language switch if the answer is in the wrong language (but do not prepend apology or override correct answers)
+        if detected_language != answer_language:
             print(f"Language mismatch detected. Question: {detected_language}, Answer: {answer_language}")
-            # Force English response
-            return "I apologize, but I should respond in English. Let me provide the information in English: " + answer
-        
+            # Optionally, you could re-ask the model here, but for now just return the answer as is
         return answer
     except Exception as e:
         print(f"OpenAI API Error: {e}")
@@ -156,7 +150,7 @@ Initial answer: "{initial_answer}"
 
 Please provide additional context to clarify any vague terms in the answer. Focus on:
 - What types of hours count (academic, practical, online, etc.)
-- What "externally" means specifically
+- What \"externally\" means specifically
 - Any restrictions or requirements
 - Examples of qualifying activities
 - Specific details about procedures or processes mentioned
@@ -164,7 +158,6 @@ Please provide additional context to clarify any vague terms in the answer. Focu
 Format the response as a clean, well-structured list with clear headings. Use bullet points and proper spacing.
 
 Keep the response concise but informative. Respond in {detected_language} only."""
-    
     try:
         response = openai.chat.completions.create(
             model=GPT_MODEL,
@@ -181,13 +174,12 @@ def generate_enhanced_answer(context, question, conversation_context, enhance_co
     """Generate answer with optional two-stage enhancement."""
     # Get initial answer
     initial_answer = generate_answer(context, question, conversation_context)
-    
+    detected_language = detect_language(question)
     # Only enhance if user specifically requests it AND the answer is not "no details found"
     if enhance_context and "no details found" not in initial_answer.lower():
-        enhanced_context = enhance_answer_with_context(initial_answer, question, detect_language(question))
+        enhanced_context = enhance_answer_with_context(initial_answer, question, detected_language)
         if enhanced_context and enhanced_context != initial_answer:
             return f"{initial_answer}\n\n**Additional Context:**\n{enhanced_context}"
-    
     return initial_answer
 
 def generate_follow_up(previous_question, previous_answer, current_question, current_answer):
