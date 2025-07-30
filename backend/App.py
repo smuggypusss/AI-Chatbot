@@ -94,8 +94,30 @@ def detect_language(text):
         return "German"
     return "English"
 
+def generate_conversation_title(first_question):
+    """Generate a conversation title from the first user question."""
+    try:
+        response = openai.chat.completions.create(
+            model=GPT_MODEL,
+            messages=[
+                {"role": "system", "content": "Generate a short, descriptive title (max 30 characters) for a conversation based on the first question. Return only the title, nothing else."},
+                {"role": "user", "content": f"First question: {first_question}"}
+            ],
+            temperature=0.3,
+            max_tokens=50
+        )
+        title = response.choices[0].message.content.strip()
+        # Clean up the title
+        title = title.replace('"', '').replace("'", "")
+        if len(title) > 30:
+            title = title[:27] + "..."
+        return title
+    except Exception as e:
+        print(f"Title generation error: {e}")
+        return first_question[:30] if first_question else "New Chat"
+
 def generate_answer(context, question, conversation_context):
-    previous = "\n".join([f"User: {turn['user']}\nAI: {turn['ai']}" for turn in conversation_context[-3:]])
+    previous = "\n".join([f"User: {turn['user']}\nAI: {turn['ai']}" for turn in conversation_context[-6:]])  # Increased from 3 to 6 for better memory
     # Detect the language of the user's question
     detected_language = detect_language(question)
     system_message = f"""You are a helpful medical assistant.
@@ -245,17 +267,21 @@ def chat_endpoint(req: ChatRequest):
     history = load_history_from_s3(username)
     if not history or not convo_id:
         # Start new conversation if none exists or no convo_id provided
-        convo = add_conversation(username, user_input[:30])
+        # Generate a title from the first question
+        conversation_title = generate_conversation_title(user_input)
+        convo = add_conversation(username, conversation_title)
         convo_id = convo["id"]
         conversation_context = []
     else:
         convo = get_conversation(username, convo_id)
         if not convo:
-            convo = add_conversation(username, user_input[:30])
+            # Generate a title from the first question
+            conversation_title = generate_conversation_title(user_input)
+            convo = add_conversation(username, conversation_title)
             convo_id = convo["id"]
             conversation_context = []
         else:
-            conversation_context = convo["messages"][-3:] if convo["messages"] else []
+            conversation_context = convo["messages"][-6:] if convo["messages"] else []  # Increased from 3 to 6 for better memory
 
     # Retrieve and rerank
     top_chunks = retrieve_chunks(user_input, top_k=10)

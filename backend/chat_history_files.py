@@ -73,11 +73,26 @@ def add_conversation(username, title=None):
     save_history_to_s3(username, history)
     return new_convo
 
+def update_conversation_title(username, convo_id, new_title):
+    """Update the title of an existing conversation."""
+    history = load_history_from_s3(username)
+    for c in history:
+        if c["id"] == convo_id:
+            c["title"] = new_title
+            save_history_to_s3(username, history)
+            return c
+    return None
+
 def add_message_to_conversation(username, convo_id, user, ai):
     history = load_history_from_s3(username)
     for c in history:
         if c["id"] == convo_id:
             c["messages"].append({"user": user, "ai": ai})
+            # Update title if it's still "New Chat" and this is the first message
+            if c["title"] == "New Chat" and len(c["messages"]) == 1:
+                from App import generate_conversation_title
+                new_title = generate_conversation_title(user)
+                c["title"] = new_title
             save_history_to_s3(username, history)
             return c
     return None
