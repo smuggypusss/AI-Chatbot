@@ -167,16 +167,19 @@ Current Question (respond in the SAME language as this question):
 
 def enhance_answer_with_context(initial_answer, question, detected_language):
     """Enhance the initial answer with additional context for vague terms."""
-    system_message = f"You MUST respond in {detected_language} only. Do not use any other language."
+    system_message = f"You MUST respond in {detected_language} only. Do not use any other language. Provide specific, detailed information related to the user's question."
     enhancement_prompt = f"""The user asked: "{question}"
 Initial answer: "{initial_answer}"
 
-Please provide additional context to clarify any vague terms in the answer. Focus on:
-- What types of hours count (academic, practical, online, etc.)
-- What \"externally\" means specifically
-- Any restrictions or requirements
-- Examples of qualifying activities
-- Specific details about procedures or processes mentioned
+Based on the user's specific question, provide detailed additional context that directly relates to what they asked. Focus on:
+
+1. **Specific details** about what they asked for
+2. **Step-by-step procedures** if applicable
+3. **Important requirements** or prerequisites
+4. **Common issues** or things to watch out for
+5. **Additional resources** or contacts they might need
+
+Make sure your response directly addresses their question and provides practical, actionable information.
 
 Format the response as a clean, well-structured list with clear headings. Use bullet points and proper spacing.
 

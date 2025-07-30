@@ -10,7 +10,6 @@ import deFlag from '../assets/de.png';
 const MOBILE_TABS = [
   { key: 'ai-assistant', label: 'AI Assistant' },
   { key: 'protocols', label: 'Protocols' },
-  { key: 'files', label: 'Files' },
 ];
 
 export const TopBar = ({ onMenuClick, onMobileNav }) => {

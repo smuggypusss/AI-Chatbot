@@ -32,14 +32,6 @@ export default function NavTabs({ activeKey, onChange, className }) {
         </span>
       ),
     },
-    {
-      key: "files",
-      label: (
-        <span>
-          <FolderOpenOutlined /> {t("Files")}
-        </span>
-      ),
-    },
   ];
 
   return (

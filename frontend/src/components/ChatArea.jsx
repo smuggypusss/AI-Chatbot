@@ -5,7 +5,7 @@ import robotImg from "../assets/robot.png";
 const { TextArea } = Input;
 const { Option } = Select;
 
-export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
+export default function ChatArea({ clearChatFlag, convoId, email, onNewChat, onMessageSent }) {
   const { t } = useTranslation();
   const initialMessages = [
     {
@@ -37,10 +37,14 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
       setFollowUp("");
       setSources([]);
       setIsActiveChat(false);
+      setEnhancedContext("");
+      setShowEnhancedContext(false);
       return;
     }
     setLoadingConvo(true);
     setIsActiveChat(false);
+    setEnhancedContext("");
+    setShowEnhancedContext(false);
     
     // ✅ FIXED: Use API_URL variable to fetch conversation
     fetch(`${API_URL}/conversation/${convoId}?email=${encodeURIComponent(email)}`)
@@ -64,6 +68,8 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
         setSources([]);
         setLoadingConvo(false);
         setIsActiveChat(false);
+        setEnhancedContext("");
+        setShowEnhancedContext(false);
       })
       .catch(() => {
         setMessages(initialMessages);
@@ -71,6 +77,8 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
         setSources([]);
         setLoadingConvo(false);
         setIsActiveChat(false);
+        setEnhancedContext("");
+        setShowEnhancedContext(false);
       });
     // eslint-disable-next-line
   }, [convoId, clearChatFlag, email]);
@@ -127,6 +135,11 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
         setFollowUp(data.follow_up || "");
         setSources(Array.isArray(data.sources) ? data.sources : []);
         setLoading(false);
+        
+        // Trigger conversation refresh to update titles in real-time
+        if (onMessageSent) {
+          onMessageSent();
+        }
       })
       .catch((error) => {
         console.error("Backend error:", error);
@@ -247,7 +260,7 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat }) {
                                   <b>{t('Follow-up suggestion')}:</b> {followUp}
                                 </div>
                               )}
-                              {msg.content && !msg.content.includes("No details found") && !enhancedContext && isLastAssistant && isActiveChat && (
+                              {msg.content && !msg.content.includes("No details found") && !enhancedContext && isLastAssistant && isActiveChat && !msg.content.includes("Hello! I'm ResQ AI") && (
                                 <div className="mt-2">
                                   <Button 
                                     size="small" 

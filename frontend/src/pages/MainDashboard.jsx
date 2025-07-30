@@ -98,6 +98,11 @@ export default function MainDashboard() {
     setSidebarOpen(false);
   };
 
+  // Handle message sent to refresh conversations
+  const handleMessageSent = () => {
+    fetchConversations();
+  };
+
   return (
     <div className="bg-[#f5f7fa] min-h-screen w-full flex flex-col">
       <TopBar onMenuClick={activeTab === "ai-assistant" ? () => setSidebarOpen(true) : undefined} onMobileNav={handleTabChange} />
@@ -150,6 +155,7 @@ export default function MainDashboard() {
                 convoId={selectedConvoId}
                 email={email}
                 onNewChat={handleNewChat}
+                onMessageSent={handleMessageSent}
               />
             </div>
           </div>
