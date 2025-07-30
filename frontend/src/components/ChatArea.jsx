@@ -19,6 +19,7 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat, onM
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingConvo, setLoadingConvo] = useState(false);
+  const [loadingContext, setLoadingContext] = useState(false);
   const messagesEndRef = useRef(null);
   const [followUp, setFollowUp] = useState("");
   const [sources, setSources] = useState([]);
@@ -166,7 +167,7 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat, onM
   const getEnhancedContext = async () => {
     if (!lastQuestion || !convoId) return;
     
-    setLoading(true);
+    setLoadingContext(true);
     try {
       const response = await fetch(`${API_URL}/enhance_context`, {
         method: "POST",
@@ -188,7 +189,7 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat, onM
     } catch (error) {
       console.error("Error getting enhanced context:", error);
     } finally {
-      setLoading(false);
+      setLoadingContext(false);
     }
   };
 
@@ -266,9 +267,16 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat, onM
                                     size="small" 
                                     type="dashed"
                                     onClick={getEnhancedContext}
-                                    loading={loading}
+                                    disabled={loadingContext}
                                   >
-                                    {t("More Context")}
+                                    {loadingContext ? (
+                                      <span>
+                                        <Spin size="small" style={{ marginRight: 6 }} />
+                                        {t("Loading Context...")}
+                                      </span>
+                                    ) : (
+                                      t("More Context")
+                                    )}
                                   </Button>
                                 </div>
                               )}
@@ -343,11 +351,17 @@ export default function ChatArea({ clearChatFlag, convoId, email, onNewChat, onM
         <Button
           type="primary"
           onClick={sendMessage}
-          loading={loading}
+          disabled={!convoId || loading}
           style={{ height: 40, minWidth: 80, padding: "0 16px" }}
-          disabled={!convoId}
         >
-          {t("Send")}
+          {loading ? (
+            <span>
+              <Spin size="small" style={{ marginRight: 6 }} />
+              {t("Generating...")}
+            </span>
+          ) : (
+            t("Send")
+          )}
         </Button>
       </div>
     </div>
