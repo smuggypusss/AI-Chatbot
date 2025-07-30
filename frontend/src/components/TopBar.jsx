@@ -3,16 +3,13 @@ import { HeartFilled, WarningFilled, MenuOutlined, UserOutlined, LogoutOutlined,
 import { Dropdown, Menu, Avatar, Select } from 'antd';
 import { useTranslation } from 'react-i18next';
 import allesHealthLogo from '../assets/hospital_logo.png';
-import allesLogo from '../assets/Alles Health.png';
+import allesLogo from '../assets/AH Favicon Logo Transparent.png';
 import usFlag from '../assets/us.png';
 import deFlag from '../assets/de.png';
 
 const MOBILE_TABS = [
   { key: 'ai-assistant', label: 'AI Assistant' },
   { key: 'protocols', label: 'Protocols' },
-  { key: 'drug-calc', label: 'Drug Calc' },
-  { key: 'triage', label: 'Triage' },
-  { key: 'med-search', label: 'Med Search' },
   { key: 'files', label: 'Files' },
 ];
 
@@ -64,7 +61,7 @@ export const TopBar = ({ onMenuClick, onMobileNav }) => {
           </button>
         )}
         {/* Centered Alles Health logo */}
-        <img src={allesHealthLogo} alt="Alles Health" className="h-7 mx-auto" style={{ flex: 1, objectFit: 'contain', maxWidth: 110 }} />
+        <img src={allesLogo} alt="Alles Health" className="h-7 mx-auto" style={{ flex: 1, objectFit: 'contain', maxWidth: 110 }} />
         {/* User icon and dropdown */}
         <Dropdown overlay={menu} placement="bottomRight" trigger={["click"]}>
           <div className="flex items-center cursor-pointer select-none ml-2">
@@ -77,7 +74,7 @@ export const TopBar = ({ onMenuClick, onMobileNav }) => {
       <div className="hidden md:flex justify-between items-center w-full">
         <div className="flex items-center">
           <img src={allesHealthLogo} alt="Hospital Logo" style={{ height: 36, marginRight: 12 }} />
-          <img src={allesLogo} alt="Alles Health" style={{ height: 36, marginRight: 18 }} />
+          <img src={allesLogo} alt="Alles Health" style={{ height: 40, marginRight: 18 }} />
           <div>
             <h1 className="text-xl font-bold text-gray-800">ResQ AI</h1>
             <p className="text-sm text-gray-500">{t('Emergency Services AI Agent for Bülach Hospital')}</p>

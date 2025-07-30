@@ -33,30 +33,6 @@ export default function NavTabs({ activeKey, onChange, className }) {
       ),
     },
     {
-      key: "drug-calc",
-      label: (
-        <span>
-          <CalculatorOutlined /> {t("Drug Calc")}
-        </span>
-      ),
-    },
-    {
-      key: "triage",
-      label: (
-        <span>
-          <UserSwitchOutlined /> {t("Triage")}
-        </span>
-      ),
-    },
-    {
-      key: "med-search",
-      label: (
-        <span>
-          <SearchOutlined /> {t("Med Search")}
-        </span>
-      ),
-    },
-    {
       key: "files",
       label: (
         <span>
