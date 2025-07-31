@@ -167,9 +167,7 @@ Current Question (respond in the SAME language as this question):
 
 def enhance_answer_with_context(initial_answer, question, detected_language):
     """Enhance the initial answer with additional context for vague terms."""
-    system_message = f"You MUST respond in {detected_language} only. Do not use any other language. Provide specific, detailed information related to the user's question."
-    enhancement_prompt = f"""The user asked: "{question}"
-Initial answer: "{initial_answer}"
+    system_message = f"""You MUST respond in {detected_language} only. Do not use any other language. Provide specific, detailed information related to the user's question.
 
 Based on the user's specific question, provide detailed additional context that directly relates to what they asked. Focus on:
 
@@ -184,6 +182,14 @@ Make sure your response directly addresses their question and provides practical
 Format the response as a clean, well-structured list with clear headings. Use bullet points and proper spacing.
 
 Keep the response concise but informative. Respond in {detected_language} only."""
+    
+    enhancement_prompt = f"""The user asked: "{question}"
+Initial answer: "{initial_answer}"
+
+Provide detailed additional context that directly relates to what they asked. Focus on specific details, step-by-step procedures, important requirements, common issues, and additional resources.
+
+Format as a clean, well-structured list with clear headings. Use bullet points and proper spacing."""
+    
     try:
         response = openai.chat.completions.create(
             model=GPT_MODEL,
@@ -194,7 +200,8 @@ Keep the response concise but informative. Respond in {detected_language} only."
             temperature=0.7,
             max_tokens=500
         )
-        return response.choices[0].message.content.strip()
+        enhanced_context = response.choices[0].message.content.strip()
+        return enhanced_context
     except Exception as e:
         print(f"Enhancement API Error: {e}")
         return ""
